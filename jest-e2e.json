@@ -1,0 +1,38 @@
+{
+  "moduleFileExtensions": [
+    "js",
+    "json",
+    "ts"
+  ],
+  "rootDir": "./",
+  "testRegex": ".test.ts$",
+  "transform": {
+    "^.+\\.(t|j)s$": [
+      "ts-jest",
+      {
+        "tsconfig": "tsconfig.json"
+      }
+    ]
+  },
+  "collectCoverageFrom": [
+    "bff-api/src/**/*.ts",
+    "checkout-svc/src/**/*.ts",
+    "payments-svc/src/**/*.ts",
+    "shipping-svc/src/**/*.ts"
+  ],
+  "coveragePathIgnorePatterns": [
+    "\\.module\\.ts$",
+    "\\main\\.ts$",
+    "\\health",
+    "/database/",
+    "/events/",
+    "/gateways/",
+    "/health/",
+    "/dto/",
+    "/entities/",
+    "/broker/",
+    "/models/"
+  ],
+  "coverageDirectory": "./coverage",
+  "testEnvironment": "node"
+}

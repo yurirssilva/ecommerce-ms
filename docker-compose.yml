@@ -1,0 +1,153 @@
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin    
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5  
+    networks:
+      - ecommerce
+  mongo-checkoutdb:
+    image: mongo
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: checkout
+      MONGO_INITDB_ROOT_PASSWORD: checkout
+      MONGO_INITDB_DATABASE: checkoutdb
+    volumes:
+      - mongo_checkout_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5      
+    ports:
+      - "27018:27017"
+    networks:
+      - ecommerce
+  mongo-paymentdb:
+    image: mongo
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: payment
+      MONGO_INITDB_ROOT_PASSWORD: payment
+      MONGO_INITDB_DATABASE: paymentdb
+    volumes:
+      - mongo_payment_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5      
+    ports:
+      - "27019:27017"
+    networks:
+      - ecommerce
+  mongo-shippingdb:
+    image: mongo
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: shipping
+      MONGO_INITDB_ROOT_PASSWORD: shipping
+      MONGO_INITDB_DATABASE: shippingdb
+    volumes:
+      - mongo_shipping_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5      
+    ports:
+      - "27020:27017"
+    networks:
+      - ecommerce
+  checkout:
+    build: ./checkout-svc
+    container_name: checkout
+    ports:
+      - "3001:3000"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      mongo-checkoutdb:
+        condition: service_healthy
+    environment:
+      MONGO_URL: mongodb://checkout:checkout@mongo-checkoutdb:27017/checkoutdb?authSource=admin
+      RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5      
+    networks:
+      - ecommerce
+  payment:
+    build: ./payments-svc
+    container_name: payments
+    ports:
+      - "3003:3000"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      mongo-paymentdb:
+        condition: service_healthy
+    environment:
+      MONGO_URL: mongodb://payment:payment@mongo-paymentdb:27017/paymentdb?authSource=admin
+      RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5      
+    networks:
+      - ecommerce
+  shipping:
+    build: ./shipping-svc
+    container_name: shipping
+    ports:
+      - "3004:3000"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      mongo-shippingdb:
+        condition: service_healthy
+    environment:
+      MONGO_URL: mongodb://shipping:shipping@mongo-shippingdb:27017/shippingdb?authSource=admin
+      RABBITMQ_URL: amqp://admin:admin@rabbitmq:5672
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ecommerce
+
+  bff:
+    build: ./bff-api
+    container_name: bff
+    command: npm run start:dev
+    ports:
+      - "3000:3000"
+    depends_on:
+      checkout:
+        condition: service_healthy
+      payment:
+        condition: service_healthy
+      shipping:
+        condition: service_healthy
+    networks:
+      - ecommerce      
+  tests:
+    build:
+      context: .
+      dockerfile: tests.Dockerfile
+networks:
+  ecommerce:
+volumes:
+  mongo_checkout_data:
+  mongo_payment_data:
+  mongo_shipping_data:

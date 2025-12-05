@@ -1,0 +1,7 @@
+export enum OrderStatus {
+  CREATED = 'CREATED',
+  PAID = 'PAID',
+  SHIPPED = 'SHIPPED',
+  PAYMENT_RETRY = 'PAYMENT_RETRY',
+  CANCELED = 'CANCELED',
+}
