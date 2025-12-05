@@ -54,9 +54,6 @@ Projeto de arquitetura de microserviços baseado em eventos. As atribuições do
 # Endpoints principais
 ## BFF
 POST /orders → Cria checkout  
-GET /orders/:checkoutId → Retorna agregação de checkout, pagamento e shipping
-
-
 Exemplo:
 ```javascript 
 {            
@@ -65,7 +62,9 @@ Exemplo:
         total: 100
 }
 ```
-GET /health -> Retorna o status do BFF e de cada serviço
+GET /orders/:checkoutId → Retorna agregação de checkout, pagamento e shipping  
+GET /health -> Retorna o status do BFF e de cada serviço  
+GET /docs -> Retorna a documentação da API
 
 ## Checkout
 GET /checkout/:id → Consulta checkout  
